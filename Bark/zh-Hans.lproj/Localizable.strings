@@ -19,6 +19,7 @@ Notice2 = "推送标题的字号比推送内容粗一点";
 
 Copy = "复制成功";
 Copy2 = "复制";
+Cancel = "取消";
 
 AllowNotifications = "绑定设备需要推送。请打开推送后重试";
 
@@ -46,3 +47,19 @@ copyParameter = "下拉推送、锁屏界面左滑查看推送时，可以选择
 
 automaticallyCopyTitle = "自动复制推送内容";
 automaticallyCopy = "携带automaticallyCopy参数时，将自动复制推送内容。\n携带copy参数时，将只复制copy参数的值";
+
+historyMessage = "历史消息";
+
+unknown = "未知";
+available = "已开启";
+restricted = "未开启";
+settings = "设置";
+
+iCloudSatatus = "iCloud 同步";
+iCloudSync = "通知消息将在iCloud可用时同步";
+
+defaultArchiveSettings = "默认保存";
+archiveNote = "当推送请求URL没有指定 isArchive 参数时，将按照此设置来决定是否保存通知消息";
+
+archiveNotificationMessageTitle = "自动保存通知消息";
+archiveNotificationMessage = "当设置 isArchive 值为 1 时，则会自动保存这条推送消息，设置为其他值时，则不会保存。\n如果不指定 isArchive 参数时，则按照默认设置保存消息，可以在 消息->设置->默认保存消息 更改默认保存设置";

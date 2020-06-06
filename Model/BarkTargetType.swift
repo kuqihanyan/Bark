@@ -9,7 +9,6 @@
 import UIKit
 import Moya
 import RxSwift
-import Result
 
 //保存全局Providers
 fileprivate var retainProviders:[String: Any] = [:]
@@ -60,9 +59,13 @@ extension BarkTargetType {
         return NetworkActivityPlugin { (change, type) in
             switch change {
             case .began:
-                UIApplication.shared.isNetworkActivityIndicatorVisible = true
+                dispatch_sync_safely_main_queue {
+                    UIApplication.shared.isNetworkActivityIndicatorVisible = true
+                }
             case .ended:
-                UIApplication.shared.isNetworkActivityIndicatorVisible = false
+                dispatch_sync_safely_main_queue {
+                    UIApplication.shared.isNetworkActivityIndicatorVisible = false
+                }
             }
         }
     }
@@ -120,7 +123,7 @@ fileprivate class LogPlugin: PluginType{
     }
     func didReceive(_ result: Result<Response, MoyaError>, target: TargetType) {
         print("\n-------------------\n请求结束: \(target.path)")
-        if let data = result.value?.data, let resutl = String(data: data, encoding: String.Encoding.utf8) {
+        if let data = try? result.get().data, let resutl = String(data: data, encoding: String.Encoding.utf8) {
             print("请求结果: \(resutl)")
         }
         print("\n")

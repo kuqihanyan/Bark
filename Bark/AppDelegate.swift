@@ -9,19 +9,26 @@
 import UIKit
 import Material
 import UserNotifications
+import RealmSwift
+import IceCream
+
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate{
 
     var window: UIWindow?
+    var syncEngine: SyncEngine?
 
-
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         
         self.window = UIWindow(frame: UIScreen.main.bounds)
+        if #available(iOS 13.0, *) {
+            self.window?.overrideUserInterfaceStyle = .light
+        }
         self.window?.backgroundColor = Color.grey.lighten5
         self.window?.rootViewController = BarkSnackbarController(rootViewController: BarkNavigationController(rootViewController: HomeViewController()))
         self.window?.makeKeyAndVisible()
-        
+
+        UNUserNotificationCenter.current().delegate = self
         UNUserNotificationCenter.current().setNotificationCategories([
             UNNotificationCategory(identifier: "myNotificationCategory", actions: [
                 UNNotificationAction(identifier: "copy", title: NSLocalizedString("Copy2"), options: UNNotificationActionOptions.foreground)
@@ -35,6 +42,42 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 }
             }
         }
+        
+        //调整返回按钮样式
+        let bar = UINavigationBar.appearance(whenContainedInInstancesOf: [BarkNavigationController.self])
+        bar.backIndicatorImage = UIImage(named: "back")
+        bar.backIndicatorTransitionMaskImage = UIImage(named: "back")
+        bar.tintColor = Color.darkText.primary
+        
+        let buttonItem = UIBarButtonItem.appearance(whenContainedInInstancesOf: [BarkNavigationController.self])
+        buttonItem.setTitleTextAttributes([NSAttributedString.Key.font: UIFont.systemFont(ofSize: 0)], for: .normal)
+        buttonItem.setBackButtonTitlePositionAdjustment(UIOffset(horizontal: -1000, vertical: 0), for: .default)
+        
+        let groupUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.bark")
+        let fileUrl = groupUrl?.appendingPathComponent("bark.realm")
+        let config = Realm.Configuration(
+            fileURL: fileUrl,
+            schemaVersion: 12,
+            migrationBlock: { migration, oldSchemaVersion in
+                // We haven’t migrated anything yet, so oldSchemaVersion == 0
+                if (oldSchemaVersion < 1) {
+                    // Nothing to do!
+                    // Realm will automatically detect new properties and removed properties
+                    // And will update the schema on disk automatically
+                }
+        })
+        // Tell Realm to use this new configuration object for the default Realm
+        Realm.Configuration.defaultConfiguration = config
+
+        //iCloud 同步
+        syncEngine = SyncEngine(objects: [
+            SyncObject<Message>()
+        ], databaseScope: .private)
+
+
+        let realm = try? Realm()
+        print("message count: \(realm?.objects(Message.self).count ?? 0)")
+        
         return true
     }
 
@@ -49,7 +92,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         //注册设备
         Client.shared.bindDeviceToken()
     }
-    func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        notificatonHandler(userInfo: notification.request.content.userInfo)
+    }
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+        notificatonHandler(userInfo: response.notification.request.content.userInfo)
+    }
+    private func notificatonHandler(userInfo:[AnyHashable:Any]){
         
         let navigationController = ((self.window?.rootViewController as? BarkSnackbarController)?
             .rootViewController as? BarkNavigationController)
@@ -122,9 +171,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         else{
             presentController()
         }
-    
     }
-    
+
     func applicationWillResignActive(_ application: UIApplication) {
         // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
         // Use this method to pause ongoing tasks, disable timers, and invalidate graphics rendering callbacks. Games should use this method to pause the game.

@@ -12,14 +12,13 @@ import Material
 class HomeViewController: BaseViewController {
     
     let newButton: IconButton = {
-        let btn = IconButton(image: Icon.add, tintColor: .white)
-        btn.pulseColor = .white
+        let btn = IconButton(image: Icon.add, tintColor: .black)
+        btn.pulseColor = .black
+        btn.frame = CGRect(x: 0, y: 0, width: 40, height: 40)
         return btn
     }()
     
-    let startButton = FABButton(title: NSLocalizedString("RegisterDevice"))
-    
-    let statusButton = IconButton(image: UIImage(named: "baseline_https_black_24pt"), tintColor: .white)
+    lazy var startButton = FABButton(title: NSLocalizedString("RegisterDevice"))
     
     let tableView :UITableView = {
         let tableView = UITableView()
@@ -38,6 +37,11 @@ class HomeViewController: BaseViewController {
                 title: NSLocalizedString("CustomedNotificationTitle"),
                 body: NSLocalizedString("CustomedNotificationContent"),
                 notice: NSLocalizedString("Notice2")),
+            PreviewModel(
+                body: NSLocalizedString("archiveNotificationMessageTitle"),
+                notice: NSLocalizedString("archiveNotificationMessage"),
+                queryParameter: "isArchive=1"
+                ),
             PreviewModel(
                 body: "URL Test",
                 notice: NSLocalizedString("urlParameter"),
@@ -73,15 +77,14 @@ class HomeViewController: BaseViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         self.view.backgroundColor = Color.grey.lighten3
-        
-        navigationItem.titleLabel.textColor = .white
-        navigationItem.titleLabel.textAlignment = .left
-        navigationItem.detailLabel.textAlignment = .left
-        navigationItem.detailLabel.textColor = .white
-        
+
         newButton.addTarget(self, action: #selector(new), for: .touchUpInside)
-        navigationItem.rightViews = [newButton]
-        navigationItem.leftViews = [statusButton]
+        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: newButton)
+        
+        let messageBtn = IconButton(image: Icon.history, tintColor: .black)
+        messageBtn.frame = CGRect(x: 0, y: 0, width: 40, height: 40)
+        messageBtn.addTarget(self, action: #selector(history), for: .touchUpInside)
+        navigationItem.leftBarButtonItem = UIBarButtonItem(customView: messageBtn)
 
         self.view.addSubview(self.tableView)
         self.tableView.snp.makeConstraints { (make ) in
@@ -93,6 +96,7 @@ class HomeViewController: BaseViewController {
         UNUserNotificationCenter.current().getNotificationSettings { (settings) in
             if settings.authorizationStatus != .authorized {
                 dispatch_sync_safely_main_queue {
+                    self.startButton.backgroundColor = Color.white
                     self.startButton.transition([ .scale(0.75) , .opacity(0)] )
                     self.startButton.addTarget(self, action: #selector(self.start), for: .touchUpInside)
                     self.view.addSubview(self.startButton)
@@ -110,33 +114,18 @@ class HomeViewController: BaseViewController {
     }
     override func viewWillAppear(_ animated: Bool) {
         if let url = URL(string: ServerManager.shared.currentAddress) {
-            navigationItem.titleLabel.text = url.host
+            navigationItem.title = url.host
             refreshState()
         }
     }
     
-    let rowheight:[CGFloat] = {
-        let screenWidth = UIScreen.main.bounds.width
-        if screenWidth <= 320 {
-            return [170,170,170,320,170]
-        }
-        if screenWidth <= 375 {
-            return [205,205,205,380,205]
-        }
-        if screenWidth <= 414 {
-            return [195,195,195,390,195]
-        }
-        return [205,205,205,380,205]
-    }()
 }
 
 extension HomeViewController : UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return dataSource.count
     }
-    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return rowheight[indexPath.row]
-    }
+
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         if let cell = tableView.dequeueReusableCell(withIdentifier: "\(indexPath.row)") as? PreviewCardCell{
             cell.bind(model: dataSource[indexPath.row])
@@ -182,25 +171,21 @@ extension HomeViewController {
             
         })
     }
-    
+    @objc func history(){
+        self.navigationController?.pushViewController(MessageListViewController(), animated: true)
+    }
     @objc func refreshState() {
         switch Client.shared.state {
         case .ok:
             if let url = URL(string: ServerManager.shared.currentAddress) {
-                if url.scheme?.lowercased() == "https" {
-                    navigationItem.detailLabel.text = NSLocalizedString("SecureConnection")
-                    statusButton.image = UIImage(named: "baseline_https_black_24pt")
-                }
-                else {
-                    navigationItem.detailLabel.text = NSLocalizedString("InsecureConnection")
-                    statusButton.image = UIImage(named: "baseline_http_black_24pt")
+                if url.scheme?.lowercased() != "https" {
+                    self.showSnackbar(text: NSLocalizedString("InsecureConnection"))
                 }
                 self.tableView.reloadData()
             }
-        case .unRegister:
-            navigationItem.detailLabel.text = NSLocalizedString("UnregisteredDevice")
         case .serverError:
-            navigationItem.detailLabel.text = NSLocalizedString("ServerError")
+            self.showSnackbar(text: NSLocalizedString("ServerError"))
+        default: break;
         }
     }
 }

@@ -19,6 +19,7 @@ Notice2 = "Customed notification content and title";
 
 Copy = "Copied!";
 Copy2 = "Copy";
+Cancel = "Cancel";
 
 AllowNotifications = "Notifications have been turned off, Please allow notifications and try again";
 
@@ -46,3 +47,19 @@ copyParameter = "If the URL has a copy parameter then the value of the copy \npa
 
 automaticallyCopyTitle = "Automatically copy push content";
 automaticallyCopy = "Automatically copy push content \nwhen a push is received";
+
+historyMessage = "History Message";
+
+unknown = "Unknown";
+available = "Available";
+restricted = "Restricted";
+settings = "Settings";
+
+iCloudSatatus = "iCloud sync";
+iCloudSync = "Notification messages will be synced when iCloud is available";
+
+defaultArchiveSettings = "Archive by default";
+archiveNote = "When the isArchive parameter is not specified in the push request URL, whether to archive the notification message will be decided according to this setting";
+
+archiveNotificationMessageTitle = "Archive notification message";
+archiveNotificationMessage = "Notification message will be archived when isArchive value is 1, and will not be archived when the value is 0.\nIf the isArchive parameter is not specified, the notification message will be archived according to the default settings";

@@ -13,6 +13,13 @@ class Client: NSObject {
     private override init() {
         super.init()
     }
+    var currentNavigationController:UINavigationController? {
+        get {
+            let controller = UIApplication.shared.delegate?.window??.rootViewController as? BarkSnackbarController
+            let nav = controller?.rootViewController as? UINavigationController
+            return nav
+        }
+    }
     
     let appVersion:String = {
         var version = "0.0.0"
@@ -70,10 +77,8 @@ class Client: NSObject {
         let center = UNUserNotificationCenter.current()
         center.requestAuthorization(options: [.alert , .sound , .badge], completionHandler: {(_ granted: Bool, _ error: Error?) -> Void in
             if granted {
-                DispatchQueue.global(qos: .default).async {
-                    DispatchQueue.main.sync {
-                        UIApplication.shared.registerForRemoteNotifications()
-                    }
+                dispatch_sync_safely_main_queue {
+                    UIApplication.shared.registerForRemoteNotifications()
                 }
             }
             else{
