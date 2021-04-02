@@ -8,6 +8,9 @@
 
 import UIKit
 import UserNotifications
+import RxSwift
+import RxCocoa
+
 class Client: NSObject {
     static let shared = Client()
     private override init() {
@@ -51,25 +54,33 @@ class Client: NSObject {
         case serverError
     }
     
-    var state = ClienState.ok {
-        didSet{
-            NotificationCenter.default.post(name: Notification.Name(rawValue: "ClientStateChangeds"), object: nil)
-        }
-    }
+    var state = BehaviorRelay<ClienState>(value: .ok)
     
+    var dispose:Disposable?
     func bindDeviceToken(){
         if let token = Settings[.deviceToken] , token.count > 0{
-            _ = BarkApi.provider.request(.register(key: key, devicetoken: token)).filterResponseError().subscribe(onNext: { (json) in
-                if let key = json["data","key"].rawString() {
-                    Client.shared.key = key
-                    self.state = .ok
+            dispose?.dispose()
+            
+            dispose = BarkApi.provider
+                .request(.register(
+                            key: key,
+                            devicetoken: token))
+                .filterResponseError()
+                .map { (json) -> ClienState in
+                    switch json {
+                    case .success(let json):
+                        if let key = json["data","key"].rawString() {
+                            Client.shared.key = key
+                            return .ok
+                        }
+                        else{
+                            return .serverError
+                        }
+                    case .failure:
+                        return .serverError
+                    }
                 }
-                else{
-                    self.state = .serverError
-                }
-            }, onError: { (error) in
-                self.state = .serverError
-            })
+                .bind(to: state)
         }
     }
     

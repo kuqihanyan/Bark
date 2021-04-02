@@ -28,7 +28,7 @@ post 请求 参数名也是上面这些
 https://api.day.app/yourkey/验证码是9527
 ```
 
-携带参数 automaticallyCopy=1， 收到推送时，推送内容会自动复制到粘贴板
+携带参数 automaticallyCopy=1， 收到推送时，推送内容会自动复制到粘贴板（如发现不能自动复制，可尝试重启一下手机）
 ```objc
 //自动复制 “验证码是9527” 到粘贴板
 https://api.day.app/yourkey/验证码是9527?automaticallyCopy=1 
@@ -61,9 +61,6 @@ https://api.day.app/yourkey/需要保存的推送?isArchive=1
 ## Chrome 插件
 [Bark-Chrome-Extension](https://github.com/xlvecle/Bark-Chrome-Extension)
 >这是一款chrome插件能帮你方便地把网页上的文本或者网址推送到Bark手机端。
-
-[Bark-Chrome-Extension 自动复制版](https://github.com/xlvecle/Bark-Chrome-Extension)
->上面插件的修改版，iPhone会自动复制推送内容
 
 效果展示
 
